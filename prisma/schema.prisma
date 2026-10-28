@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // via PgBouncer in production
+  directUrl = env("DIRECT_URL")   // direct to Postgres, used by migrations
+}
+
+enum Role {
+  ADMIN
+  COORDINATOR
+  EXAM_OFFICER
+  FACULTY
+  STUDENT
+}
+
+enum EntryStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
+enum AttStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+model Campus {
+  id    String @id @default(cuid())
+  name  String
+  rooms Room[]
+}
+
+model Room {
+  id       String @id @default(cuid())
+  name     String
+  capacity Int
+  campusId String
+  campus   Campus @relation(fields: [campusId], references: [id])
+  entries  TimetableEntry[]
+  exams    ExamSchedule[]
+  @@unique([campusId, name])
+}
+
+model Department {
+  id      String @id @default(cuid())
+  code    String @unique
+  name    String
+  users   User[]
+  courses Course[]
+  groups  StudentGroup[]
+}
+
+model Term {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  startDate DateTime
+  endDate   DateTime
+  offerings CourseOffering[]
+}
+
+model User {
+  id           String  @id @default(cuid())
+  email        String  @unique
+  name         String
+  passwordHash String
+  role         Role
+  active       Boolean @default(true)
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  offerings    CourseOffering[]
+  enrollments  Enrollment[]
+  attendance   Attendance[] @relation("student")
+  marked       Attendance[] @relation("marker")
+  audits       AuditLog[]
+  @@index([role, departmentId])
+}
+
+model Course {
+  id           String @id @default(cuid())
+  code         String @unique
+  title        String
+  credits      Int    @default(3)
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+  offerings    CourseOffering[]
+  exams        ExamSchedule[]
+}
+
+model StudentGroup {
+  id           String @id @default(cuid())
+  name         String
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+  enrollments  Enrollment[]
+  offerings    CourseOffering[]
+  exams        ExamSchedule[]
+  @@unique([departmentId, name])
+}
+
+model Enrollment {
+  id        String @id @default(cuid())
+  studentId String
+  groupId   String
+  student   User         @relation(fields: [studentId], references: [id])
+  group     StudentGroup @relation(fields: [groupId], references: [id])
+  @@unique([studentId, groupId])
+  @@index([groupId])
+}
+
+model CourseOffering {
+  id        String @id @default(cuid())
+  courseId  String
+  termId    String
+  facultyId String
+  groupId   String
+  course    Course       @relation(fields: [courseId], references: [id])
+  term      Term         @relation(fields: [termId], references: [id])
+  faculty   User         @relation(fields: [facultyId], references: [id])
+  group     StudentGroup @relation(fields: [groupId], references: [id])
+  entries   TimetableEntry[]
+  @@unique([courseId, termId, facultyId, groupId])
+  @@index([facultyId])
+  @@index([groupId])
+  @@index([termId])
+}
+
+model TimetableEntry {
+  id         String      @id @default(cuid())
+  offeringId String
+  roomId     String
+  dayOfWeek  Int
+  startMin   Int
+  endMin     Int
+  status     EntryStatus @default(DRAFT)
+  offering   CourseOffering @relation(fields: [offeringId], references: [id])
+  room       Room           @relation(fields: [roomId], references: [id])
+  sessions   ClassSession[]
+  @@index([dayOfWeek, status])
+  @@index([offeringId])
+  @@index([roomId, dayOfWeek])
+}
+
+model ClassSession {
+  id         String   @id @default(cuid())
+  entryId    String
+  date       DateTime @db.Date
+  cancelled  Boolean  @default(false)
+  entry      TimetableEntry @relation(fields: [entryId], references: [id])
+  attendance Attendance[]
+  @@unique([entryId, date])
+  @@index([date])
+}
+
+model Attendance {
+  id         String    @id @default(cuid())
+  sessionId  String
+  studentId  String
+  markedById String
+  status     AttStatus
+  updatedAt  DateTime  @updatedAt
+  session    ClassSession @relation(fields: [sessionId], references: [id])
+  student    User         @relation("student", fields: [studentId], references: [id])
+  markedBy   User         @relation("marker", fields: [markedById], references: [id])
+  @@unique([sessionId, studentId])
+  @@index([studentId])
+}
+
+model ExamSchedule {
+  id       String      @id @default(cuid())
+  courseId String
+  groupId  String
+  roomId   String
+  date     DateTime    @db.Date
+  startMin Int
+  endMin   Int
+  status   EntryStatus @default(DRAFT)
+  course   Course       @relation(fields: [courseId], references: [id])
+  group    StudentGroup @relation(fields: [groupId], references: [id])
+  room     Room         @relation(fields: [roomId], references: [id])
+  @@index([date, status])
+  @@index([groupId])
+  @@index([courseId])
+}
+
+model Announcement {
+  id              String   @id @default(cuid())
+  title           String
+  body            String
+  audienceGroupId String?
+  createdAt       DateTime @default(now())
+  @@index([createdAt])
+  @@index([audienceGroupId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  detail    Json?
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id])
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+}

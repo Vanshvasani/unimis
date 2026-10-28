@@ -1,0 +1,5 @@
+{
+  "name": "University MIS", "short_name": "UniMIS", "start_url": "/dashboard", "scope": "/",
+  "display": "standalone", "background_color": "#ffffff", "theme_color": "#14213d",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

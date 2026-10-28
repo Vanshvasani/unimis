@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --surface: #121824;
+  --surface-muted: #1a2233;
+  --line: #222e44;
+  --line-strong: #334155;
+  --ink: #070a0f;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --accent: #f59e0b;
+}
+
+body {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  background-color: #0b0f17;
+  color: var(--text-main);
+  background-image:
+    linear-gradient(rgba(245, 158, 11, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245, 158, 11, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display), Georgia, serif;
+  letter-spacing: -0.01em;
+  color: #f8fafc;
+}
+
+h1 {
+  font-weight: 600;
+}
+
+/* Surface containers (cards, panels, tables) */
+.bg-white {
+  background-color: var(--surface) !important;
+  color: var(--text-main);
+}
+
+.border, .border-t, .border-b, .border-r, .border-l {
+  border-color: var(--line) !important;
+}
+
+.border.bg-white {
+  border-color: var(--line);
+  border-radius: 0.875rem;
+  background-color: var(--surface) !important;
+  box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Tables styling */
+table thead th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  padding: 0.5rem 0.75rem 0.5rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+table td {
+  padding: 0.55rem 0.75rem 0.55rem 0;
+  color: #e2e8f0;
+}
+
+table tbody tr {
+  border-top: 1px solid var(--line);
+}
+
+table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Inputs, textareas, selects */
+input, select, textarea {
+  background-color: #0f1624 !important;
+  border-color: var(--line) !important;
+  color: #f8fafc !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent) !important;
+  outline: none;
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+input::placeholder {
+  color: #64748b;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
